@@ -68,7 +68,7 @@ public class ExampleResource {
         /**
          * password hash
          */
-        user.setPassword(BcryptUtil.bcryptHash(user.getPassword()));
+        //user.setPassword(BcryptUtil.bcryptHash(user.getPassword()));
 
 
         client.query("insert into Users(token1,name1,password1,phone,email,typeNumber) " +
@@ -87,7 +87,7 @@ public class ExampleResource {
         String email = body.getString("email");
         String pass = body.getString("password");
 
-        pass = BcryptUtil.bcryptHash(pass);
+
 
         return client.query("SELECT count(*) as cnt FROM Users WHERE email='" + email + "' and password1='" + pass + "'")
                 .execute()
