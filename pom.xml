@@ -54,10 +54,7 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-security-jpa</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-agroal</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>

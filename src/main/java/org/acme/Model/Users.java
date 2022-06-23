@@ -19,17 +19,11 @@ public class Users {
     private static final Logger logger = Logger.getLogger(Users.class);
     private String token;
     private Long id;
-
     private String name;
-
     private String password;
-
     private int phone;
-
     private String email;
-
     private int type;
-
     public Users(){
 
     }
@@ -89,17 +83,12 @@ public class Users {
     public  void setEmail(String x){
         this.email = x;
     }
-
     public int getType(){
         return this.type;
     }
-
     public void setType(int x){
         this.type = x;
     }
-
-
-
     public static Users from(Row row){
         final Users users = new Users();
         Long id = row.getLong("id");
@@ -109,7 +98,6 @@ public class Users {
         int phone = row.getInteger("phone");
         String email = row.getString("email");
         int type = row.getInteger("typenumber");
-
         users.setId(id);
         users.setToken(token);
         users.setName(name);
@@ -119,24 +107,18 @@ public class Users {
         users.setType(type);
         return users;
     }
-
     public static Multi<Users> findAll(PgPool client) {
         return client.query("SELECT * FROM Users").execute()
                 .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
                 .onItem().transform(Users::from);
     }
-
     public static Uni<Users> findById(PgPool client,Long id) {
         return client.query("SELECT * from Users where id="+ id).execute()
                 .onItem().transform(RowSet::iterator)
                 .onItem().transform(iterator -> iterator.hasNext() ? from((Row) iterator.next()) : null);
     }
-
     public static Uni<Boolean> delete(PgPool client, Long id) {
         return client.query("DELETE FROM Users WHERE id =" + id).execute()
                 .onItem().transform(pgRowSet -> pgRowSet.rowCount() == 1);
     }
-
 }
-
-

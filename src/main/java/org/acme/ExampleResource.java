@@ -1,8 +1,10 @@
 package org.acme;
 
-import io.quarkus.elytron.security.common.BcryptUtil;
+import io.agroal.api.AgroalDataSource;
+import io.quarkus.agroal.DataSource;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.subscription.Cancellable;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.pgclient.PgPool;
 
@@ -15,6 +17,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.sql.SQLException;
 
 
 @Path("/hello")
@@ -81,19 +84,24 @@ public class ExampleResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Uni<RestResponse<JsonObject>> login(JsonObject body) {
+    public Uni<RestResponse<JsonObject>>  login(JsonObject body) {
         JsonObject jret = new JsonObject();
 
         String email = body.getString("email");
         String pass = body.getString("password");
 
-
-
-        return client.query("SELECT count(*) as cnt FROM Users WHERE email='" + email + "' and password1='" + pass + "'")
+        return client.query("SELECT id, typenumber FROM Users WHERE email='" + email + "' and password1='" + pass + "'")
                 .execute()
                 .onItem().transformToUni(rowset -> {
-                    return Uni.createFrom().item(rowset.iterator().next().getInteger(0));
+                    return Uni.createFrom().item(rowset.iterator().next());
                 })
-                .onItem().transform(count -> RestResponse.ResponseBuilder.ok(new JsonObject().put("count", count)).build());
+                .onItem()
+                .transform(row -> RestResponse.ResponseBuilder.ok(
+                        new JsonObject()
+                                .put("id", row.getInteger(0))
+                                .put("type", row.getInteger(1)))
+                                .build());
+
     }
+
 }
