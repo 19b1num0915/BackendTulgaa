@@ -17,8 +17,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.sql.SQLException;
-
+import java.util.Base64;
 
 @Path("/hello")
 public class ExampleResource {
@@ -35,7 +34,6 @@ public class ExampleResource {
     public Multi<Users> get() {
         return Users.findAll(client);
     }
-
     @GET
     @Path("{id}")
     public Uni<Response> getID(Long id) {
@@ -44,7 +42,6 @@ public class ExampleResource {
                 .onItem().transform(user -> user != null ? Response.ok(user) : Response.status(RestResponse.Status.NOT_FOUND))
                 .onItem().transform(Response.ResponseBuilder::build);
     }
-
     @DELETE
     @Path("/delete/{id}")
     public Uni<Response> deleteID(Long id) {
@@ -58,8 +55,6 @@ public class ExampleResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public RestResponse<JsonObject> addUser(JsonObject body) {
-        logger.infov("request_body={0}", body);
-
         JsonObject j = new JsonObject();
         user.setToken(body.getString("token"));
         user.setName(body.getString("name"));
@@ -67,13 +62,11 @@ public class ExampleResource {
         user.setEmail(body.getString("e-mail"));
         user.setPassword(body.getString("pass"));
         user.setType(body.getInteger("type"));
-
         /**
          * password hash
          */
         //user.setPassword(BcryptUtil.bcryptHash(user.getPassword()));
-
-
+        user.setPassword(Base64.getEncoder().encodeToString(user.getPassword().getBytes()));
         client.query("insert into Users(token1,name1,password1,phone,email,typeNumber) " +
                         "values ('" + user.getToken() + "','" + user.getName() + "', '" + user.getPassword() + "', " + user.getPhone() + ", '" + user.getEmail() + "', " + user.getType() + ")")
                 .execute().await().indefinitely();
