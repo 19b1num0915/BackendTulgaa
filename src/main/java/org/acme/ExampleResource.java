@@ -1,15 +1,10 @@
 package org.acme;
 
-import io.agroal.api.AgroalDataSource;
-import io.quarkus.agroal.DataSource;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.subscription.Cancellable;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.pgclient.PgPool;
 
-import io.vertx.mutiny.sqlclient.Row;
-import io.vertx.mutiny.sqlclient.RowSet;
 import org.acme.Model.Users;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -34,6 +29,7 @@ public class ExampleResource {
     public Multi<Users> get() {
         return Users.findAll(client);
     }
+
     @GET
     @Path("{id}")
     public Uni<Response> getID(Long id) {
@@ -42,6 +38,7 @@ public class ExampleResource {
                 .onItem().transform(user -> user != null ? Response.ok(user) : Response.status(RestResponse.Status.NOT_FOUND))
                 .onItem().transform(Response.ResponseBuilder::build);
     }
+
     @DELETE
     @Path("/delete/{id}")
     public Uni<Response> deleteID(Long id) {
@@ -73,28 +70,71 @@ public class ExampleResource {
         return RestResponse.ResponseBuilder.ok(j).build();
     }
 
+//    @Path("login")
+//    @POST
+//    @Produces(MediaType.APPLICATION_JSON)
+//    @Consumes(MediaType.APPLICATION_JSON)
+//    public Uni<RestResponse<JsonObject>> login(JsonObject body) {
+//        JsonObject jret = new JsonObject();
+//
+//        String email = body.getString("email");
+//        String pass = body.getString("password");
+//
+//        pass = Base64.getEncoder().encodeToString(pass.getBytes());
+//
+//
+//        return client.query("SELECT id, typenumber FROM Users WHERE email='" + email + "' and password1='" + pass + "'")
+//                .execute()
+//                .onItem().transformToUni(rowset -> {
+//                    return Uni.createFrom().item(rowset.iterator().next());
+//                })
+//                .onItem()
+//                .transform(row -> RestResponse.ResponseBuilder.ok(
+//                                new JsonObject()
+//                                        .put("id", row.getInteger(0))
+//                                        .put("type", row.getInteger(1)))
+//                        .build());
+//
+//    }
+
+
     @Path("login")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Uni<RestResponse<JsonObject>>  login(JsonObject body) {
+    public Uni<RestResponse<JsonObject>> ln(JsonObject body) {
         JsonObject jret = new JsonObject();
 
         String email = body.getString("email");
         String pass = body.getString("password");
 
-        return client.query("SELECT id, typenumber FROM Users WHERE email='" + email + "' and password1='" + pass + "'")
+        pass = Base64.getEncoder().encodeToString(pass.getBytes());
+        return client.query("select id, typenumber from Users where email='" + email + "' and password1='" + pass + "'")
                 .execute()
-                .onItem().transformToUni(rowset -> {
-                    return Uni.createFrom().item(rowset.iterator().next());
-                })
                 .onItem()
-                .transform(row -> RestResponse.ResponseBuilder.ok(
-                        new JsonObject()
-                                .put("id", row.getInteger(0))
-                                .put("type", row.getInteger(1)))
-                                .build());
-
+                .transformToUni(rowSet -> {
+                    return Uni.createFrom().item(rowSet.iterator().next());
+                })
+                .onItem().transform(row ->
+                     RestResponse.ResponseBuilder.ok(
+                            jret.put("id", row.getInteger(0))
+                                    .put("type", row.getInteger(1))
+                                    .put("code", "000")
+                                    .put("msg", "success")).build()
+                )
+                .onFailure().recoverWithItem(
+                        RestResponse.ResponseBuilder.ok(
+                                new JsonObject()
+                                        .put("code", "999")
+                                        .put("msg", "failed")).build());
     }
+
+
+
+
+
+
+
+
 
 }
