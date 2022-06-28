@@ -31,9 +31,8 @@ public class ExampleResource {
     }
 
     @GET
-    @Path("{id}")
+    @Path("user/{id}")
     public Uni<Response> getID(Long id) {
-        logger.infov("id={0}", id);
         return Users.findById(client, id)
                 .onItem().transform(user -> user != null ? Response.ok(user) : Response.status(RestResponse.Status.NOT_FOUND))
                 .onItem().transform(Response.ResponseBuilder::build);
@@ -51,23 +50,27 @@ public class ExampleResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public RestResponse<JsonObject> addUser(JsonObject body) {
-        JsonObject j = new JsonObject();
-        user.setToken(body.getString("token"));
-        user.setName(body.getString("name"));
-        user.setPhone(body.getInteger("phone"));
-        user.setEmail(body.getString("e-mail"));
-        user.setPassword(body.getString("pass"));
-        user.setType(body.getInteger("type"));
-        /**
-         * password hash
-         */
-        //user.setPassword(BcryptUtil.bcryptHash(user.getPassword()));
-        user.setPassword(Base64.getEncoder().encodeToString(user.getPassword().getBytes()));
-        client.query("insert into Users(token1,name1,password1,phone,email,typeNumber) " +
-                        "values ('" + user.getToken() + "','" + user.getName() + "', '" + user.getPassword() + "', " + user.getPhone() + ", '" + user.getEmail() + "', " + user.getType() + ")")
-                .execute().await().indefinitely();
-        return RestResponse.ResponseBuilder.ok(j).build();
+    public boolean addUser(JsonObject body) {
+        boolean valid = true;
+        try {
+            user.setToken(body.getString("token"));
+            user.setName(body.getString("name"));
+            user.setPhone(body.getInteger("phone"));
+            user.setEmail(body.getString("e-mail"));
+            user.setPassword(body.getString("pass"));
+            user.setType(body.getInteger("type"));
+            /**
+             * password hash
+             */
+            //user.setPassword(BcryptUtil.bcryptHash(user.getPassword()));
+            user.setPassword(Base64.getEncoder().encodeToString(user.getPassword().getBytes()));
+            client.query("insert into Users(token1,name1,password1,phone,email,typeNumber) " +
+                            "values ('" + user.getToken() + "','" + user.getName() + "', '" + user.getPassword() + "', " + user.getPhone() + ", '" + user.getEmail() + "', " + user.getType() + ")")
+                    .execute().await().indefinitely();
+        } catch (Exception e){
+            valid = false;
+        }
+        return valid;
     }
 
 //    @Path("login")
@@ -104,10 +107,8 @@ public class ExampleResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Uni<RestResponse<JsonObject>> ln(JsonObject body) {
         JsonObject jret = new JsonObject();
-
         String email = body.getString("email");
         String pass = body.getString("password");
-
         pass = Base64.getEncoder().encodeToString(pass.getBytes());
         return client.query("select id, typenumber from Users where email='" + email + "' and password1='" + pass + "'")
                 .execute()
@@ -128,13 +129,5 @@ public class ExampleResource {
                                         .put("code", "999")
                                         .put("msg", "failed")).build());
     }
-
-
-
-
-
-
-
-
 
 }
