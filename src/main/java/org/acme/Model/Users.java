@@ -1,28 +1,43 @@
 package org.acme.Model;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.oidc.IdToken;
+import io.quarkus.security.User;
+import io.quarkus.security.jpa.Password;
+import io.quarkus.security.jpa.Roles;
+import io.quarkus.security.jpa.UserDefinition;
+import io.quarkus.security.jpa.Username;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.pgclient.PgPool;
 import io.vertx.mutiny.sqlclient.Row;
 import io.vertx.mutiny.sqlclient.RowSet;
-import io.vertx.mutiny.sqlclient.Tuple;
-import org.acme.ExampleResource;
 import org.jboss.logging.Logger;
-import org.slf4j.ILoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
+import javax.persistence.Entity;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.ws.rs.core.SecurityContext;
 
 @ApplicationScoped
-public class Users {
+@Entity
+@Table(name = "Users")
+@UserDefinition
+public class Users  extends PanacheEntity {
+
     private static final Logger logger = Logger.getLogger(Users.class);
+
     private String token;
     private Long id;
     private String name;
+    @Password
     private String password;
     private int phone;
+
+    @Username
     private String email;
+
     private int type;
     public Users(){
 
@@ -121,4 +136,6 @@ public class Users {
         return client.query("DELETE FROM Users WHERE id =" + id).execute()
                 .onItem().transform(pgRowSet -> pgRowSet.rowCount() == 1);
     }
+
+
 }
